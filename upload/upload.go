@@ -1,6 +1,4 @@
-// 用于net/http标准包的文件上传
-
-package update
+package upload
 
 import (
 	"errors"
