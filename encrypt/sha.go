@@ -10,7 +10,7 @@ import (
 )
 
 // MD5ByBytes 从[]byte生成md5密文
-func MD5ByBytes(value []byte, salt ...[]byte) (result string, err error) {
+func MD5ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
 		s = salt[0]
@@ -21,15 +21,15 @@ func MD5ByBytes(value []byte, salt ...[]byte) (result string, err error) {
 	} else {
 		h = md5.New()
 	}
-	if _, err = h.Write(value); err != nil {
+	if _, err = h.Write(data); err != nil {
 		return
 	}
-	result = hex.EncodeToString(h.Sum(nil))
+	cipher = hex.EncodeToString(h.Sum(nil))
 	return
 }
 
 // MD5ByStr 从string生成md5密文
-func MD5ByStr(value string, salt ...string) (result string, err error) {
+func MD5ByStr(data string, salt ...string) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
 		s = strToBytes(salt[0])
@@ -40,15 +40,36 @@ func MD5ByStr(value string, salt ...string) (result string, err error) {
 	} else {
 		h = md5.New()
 	}
-	if _, err = h.Write(strToBytes(value)); err != nil {
+	if _, err = h.Write(strToBytes(data)); err != nil {
 		return
 	}
-	result = hex.EncodeToString(h.Sum(nil))
+	cipher = hex.EncodeToString(h.Sum(nil))
 	return
 }
 
+// MD5ByStrings 从[]string生成md5密文
+func MD5ByStrings(data []string, salt ...string) (string, error) {
+	var s []byte
+	if len(salt) > 0 {
+		s = strToBytes(salt[0])
+	}
+	var h hash.Hash
+	if len(s) > 0 {
+		h = hmac.New(md5.New, s)
+	} else {
+		h = md5.New()
+	}
+	for k := range data {
+		_, err := h.Write([]byte(data[k]))
+		if err != nil {
+			return "", err
+		}
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
 // SHA1ByBytes 根据[]byte生成sha1密文
-func SHA1ByBytes(value []byte, salt ...[]byte) (result string, err error) {
+func SHA1ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
 		s = salt[0]
@@ -59,15 +80,15 @@ func SHA1ByBytes(value []byte, salt ...[]byte) (result string, err error) {
 	} else {
 		h = sha1.New()
 	}
-	if _, err = h.Write(value); err != nil {
+	if _, err = h.Write(data); err != nil {
 		return
 	}
-	result = hex.EncodeToString(h.Sum(nil))
+	cipher = hex.EncodeToString(h.Sum(nil))
 	return
 }
 
 // SHA1ByStr 根据string生成sha1密文
-func SHA1ByStr(value string, salt ...string) (result string, err error) {
+func SHA1ByStr(data string, salt ...string) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
 		s = strToBytes(salt[0])
@@ -78,15 +99,15 @@ func SHA1ByStr(value string, salt ...string) (result string, err error) {
 	} else {
 		h = sha1.New()
 	}
-	if _, err = h.Write(strToBytes(value)); err != nil {
+	if _, err = h.Write(strToBytes(data)); err != nil {
 		return
 	}
-	result = hex.EncodeToString(h.Sum(nil))
+	cipher = hex.EncodeToString(h.Sum(nil))
 	return
 }
 
 // SHA256ByBytes 根据[]byte生成sha256密文
-func SHA256ByBytes(value []byte, salt ...[]byte) (result string, err error) {
+func SHA256ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
 		s = salt[0]
@@ -97,16 +118,16 @@ func SHA256ByBytes(value []byte, salt ...[]byte) (result string, err error) {
 	} else {
 		h = sha256.New()
 	}
-	if _, err = h.Write(value); err != nil {
+	if _, err = h.Write(data); err != nil {
 		return
 	}
 	// 计算出字符串格式的签名
-	result = hex.EncodeToString(h.Sum(nil))
+	cipher = hex.EncodeToString(h.Sum(nil))
 	return
 }
 
 // SHA256ByStr 根据string生成sha256密文
-func SHA256ByStr(value string, salt ...string) (result string, err error) {
+func SHA256ByStr(data string, salt ...string) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
 		s = strToBytes(salt[0])
@@ -117,10 +138,10 @@ func SHA256ByStr(value string, salt ...string) (result string, err error) {
 	} else {
 		h = sha256.New()
 	}
-	if _, err = h.Write(strToBytes(value)); err != nil {
+	if _, err = h.Write(strToBytes(data)); err != nil {
 		return
 	}
 	// 计算出字符串格式的签名
-	result = hex.EncodeToString(h.Sum(nil))
+	cipher = hex.EncodeToString(h.Sum(nil))
 	return
 }
