@@ -7,7 +7,8 @@ import (
 )
 
 const timeTpl string = "2006-01-02 15:04:05"
-const timeShortTpl string = "2006-01-02 15:04"
+
+// const timeShortTpl string = "2006-01-02 15:04"
 
 // TimeToStr 返回时间的字符串格式
 func TimeToStr(t time.Time, format ...string) string {
@@ -42,7 +43,7 @@ func GetMonthRange(year int, month int) (beginTime, endTime int64, err error) {
 	t := time.Now()
 
 	if year == 0 {
-		year = int(t.Year())
+		year = t.Year()
 	}
 
 	if month == 0 {

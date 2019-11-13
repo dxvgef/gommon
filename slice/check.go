@@ -33,7 +33,7 @@ func InInt64(i []int64, is int64) bool {
 // InFloat32 检查float32值在一个float32 slice中是否存在
 func InFloat32(f []float32, fs float32) bool {
 	for k := range f {
-		if fs==f[k] {
+		if fs == f[k] {
 			return true
 		}
 	}

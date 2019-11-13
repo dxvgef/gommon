@@ -5,19 +5,22 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 // Uploader 上传实例及参数
 type Uploader struct {
-	Request      *http.Request
-	FieldName    string   // 上传控件的name值
-	MaxSize      int64    // 文件大小限制（KB）
-	AllowMIME    []string // 允许上传的文件MIME值
-	SaveName     string   // 存储文件名（不含后缀名），留空则保存原文件名
-	SaveRootPath string   // 存储根路径（绝对路径）
-	SaveSubPath  string   // 存储子路径（相对SaveRootPath）
-	SaveSuffix   string   // 存储文件的后缀名（如果指定了此属性值，则强制更换后缀名）
+	Request        *http.Request
+	FieldName      string      // 上传控件的name值
+	MaxSize        int64       // 文件大小限制（KB）
+	AllowMIME      []string    // 允许上传的文件MIME值
+	SaveName       string      // 存储文件名（不含后缀名），留空则保存原文件名
+	SaveRootPath   string      // 存储根路径（绝对路径）
+	SaveSubPath    string      // 存储子路径（相对SaveRootPath）
+	SaveSuffix     string      // 存储文件的后缀名（如果指定了此属性值，则强制更换后缀名）
+	DirPermission  os.FileMode // 文件存放目录权限，如果目录已存在，则此参数无效
+	FilePermission os.FileMode // 文件权限
 }
 
 // Result 上传结果
@@ -28,11 +31,11 @@ type Result struct {
 	FileSuffix string // 上传后的文件后缀名
 }
 
-// sizeInterface 文件大小
-type sizeInterface interface {
+// _sizeInterface 文件大小
+type _sizeInterface interface {
 	Size() int64
 }
-type statInterface interface {
+type _statInterface interface {
 	Stat() (os.FileInfo, error)
 }
 
@@ -43,16 +46,24 @@ func (obj *Uploader) Exec() (result Result, err error) {
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer func() {
+		if err = file.Close(); err != nil {
+			return
+		}
+	}()
 
 	// 获得文件大小
-	if statInterface, ok := file.(statInterface); ok {
-		fileInfo, _ := statInterface.Stat()
+	if statInterface, ok := file.(_statInterface); ok {
+		fileInfo, errTmp := statInterface.Stat()
+		if errTmp != nil {
+			err = errTmp
+			return
+		}
 		result.FileSize = fileInfo.Size()
 	}
 	if result.FileSize == 0 {
-		if sizeInterface, ok := file.(sizeInterface); ok {
-			result.FileSize = sizeInterface.Size()
+		if sizeInterfaceTmp, okTmp := file.(_sizeInterface); okTmp {
+			result.FileSize = sizeInterfaceTmp.Size()
 		}
 	}
 
@@ -68,7 +79,7 @@ func (obj *Uploader) Exec() (result Result, err error) {
 
 	// 判断文件MIME值
 	result.FileMIME = head.Header.Get("Content-Type")
-	if inStr(obj.AllowMIME, result.FileMIME) == false {
+	if !inStr(obj.AllowMIME, result.FileMIME) {
 		err = errors.New("不允许上传该类型的文件")
 		return
 	}
@@ -90,18 +101,21 @@ func (obj *Uploader) Exec() (result Result, err error) {
 	}
 
 	// 递归创建目录
-	err = os.MkdirAll(obj.SaveRootPath+"/"+obj.SaveSubPath, 0755)
+	err = os.MkdirAll(obj.SaveRootPath+"/"+obj.SaveSubPath, obj.DirPermission)
 	if err != nil {
 		err = errors.New("创建目录失败")
 		return
 	}
+	// nolint:gosec
 	// 在指定的路径创建文件
-	f, err := os.OpenFile(obj.SaveRootPath+"/"+obj.SaveSubPath+"/"+obj.SaveName+"."+result.FileSuffix, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+	f, err := os.OpenFile(filepath.Clean(obj.SaveRootPath+"/"+obj.SaveSubPath+"/"+obj.SaveName+"."+result.FileSuffix), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, obj.FilePermission)
 	if err != nil {
 		err = errors.New("创建文件失败")
 		return
 	}
-	defer f.Close()
+	defer func() {
+		err = f.Close()
+	}()
 
 	// 复制数据到文件
 	if _, err = io.Copy(f, file); err != nil {

@@ -137,6 +137,7 @@ func FormatPKCS8PrivateKey(key string) []byte {
 }
 
 func formatKey(raw, prefix, suffix string, lineCount int) []byte {
+	var err error
 	raw = strings.Replace(raw, kPKCS8Prefix, "", 1)
 	raw = strings.Replace(raw, KPKCS8Suffix, "", 1)
 	if raw == "" {
@@ -152,21 +153,31 @@ func formatKey(raw, prefix, suffix string, lineCount int) []byte {
 	var sl = len(raw)
 	var c = sl / lineCount
 	if sl%lineCount > 0 {
-		c = c + 1
+		c++
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString(prefix + "\n")
+	if _, err = buf.WriteString(prefix + "\n"); err != nil {
+		return nil
+	}
 	for i := 0; i < c; i++ {
 		var b = i * lineCount
 		var e = b + lineCount
 		if e > sl {
-			buf.WriteString(raw[b:])
+			if _, err = buf.WriteString(raw[b:]); err != nil {
+				return nil
+			}
 		} else {
-			buf.WriteString(raw[b:e])
+			if _, err = buf.WriteString(raw[b:e]); err != nil {
+				return nil
+			}
 		}
-		buf.WriteString("\n")
+		if _, err = buf.WriteString("\n"); err != nil {
+			return nil
+		}
 	}
-	buf.WriteString(suffix)
+	if _, err = buf.WriteString(suffix); err != nil {
+		return nil
+	}
 	return buf.Bytes()
 }

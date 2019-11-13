@@ -2,8 +2,8 @@ package encrypt
 
 import (
 	"crypto/hmac"
-	"crypto/md5"
-	"crypto/sha1"
+	"crypto/md5"  // nolint:gosec
+	"crypto/sha1" // nolint:gosec
 	"crypto/sha256"
 	"encoding/hex"
 	"hash"
@@ -19,7 +19,7 @@ func MD5ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	if len(s) > 0 {
 		h = hmac.New(md5.New, s)
 	} else {
-		h = md5.New()
+		h = md5.New() // nolint:gosec
 	}
 	if _, err = h.Write(data); err != nil {
 		return
@@ -38,7 +38,7 @@ func MD5ByStr(data string, salt ...string) (cipher string, err error) {
 	if len(s) > 0 {
 		h = hmac.New(md5.New, s)
 	} else {
-		h = md5.New()
+		h = md5.New() // nolint:gosec
 	}
 	if _, err = h.Write(strToBytes(data)); err != nil {
 		return
@@ -57,7 +57,7 @@ func MD5ByStrings(data []string, salt ...string) (string, error) {
 	if len(s) > 0 {
 		h = hmac.New(md5.New, s)
 	} else {
-		h = md5.New()
+		h = md5.New() // nolint:gosec
 	}
 	for k := range data {
 		_, err := h.Write([]byte(data[k]))
@@ -78,7 +78,7 @@ func SHA1ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	if len(s) > 0 {
 		h = hmac.New(sha1.New, s)
 	} else {
-		h = sha1.New()
+		h = sha1.New() // nolint:gosec
 	}
 	if _, err = h.Write(data); err != nil {
 		return
@@ -97,7 +97,7 @@ func SHA1ByStr(data string, salt ...string) (cipher string, err error) {
 	if len(s) > 0 {
 		h = hmac.New(sha1.New, s)
 	} else {
-		h = sha1.New()
+		h = sha1.New() // nolint:gosec
 	}
 	if _, err = h.Write(strToBytes(data)); err != nil {
 		return

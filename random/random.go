@@ -13,7 +13,9 @@ func Upper(l int) string {
 	for i := 0; i < l; {
 		if string(Int32(65, 90)) != temp {
 			temp = string(Int32(65, 90))
-			result.WriteString(temp)
+			if _, err := result.WriteString(temp); err != nil {
+				return ""
+			}
 			i++
 		}
 	}
@@ -27,7 +29,9 @@ func Lower(l int) string {
 	for i := 0; i < l; {
 		if string(Int32(97, 122)) != temp {
 			temp = string(Int32(97, 122))
-			result.WriteString(temp)
+			if _, err := result.WriteString(temp); err != nil {
+				return ""
+			}
 			i++
 		}
 	}
