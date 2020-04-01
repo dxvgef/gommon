@@ -7,6 +7,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 )
 
@@ -23,7 +24,7 @@ const (
 
 // 解析RSA Public Key 文件
 func ParseRSAPublicKeyFile(filePath string) (*rsa.PublicKey, error) {
-	file, err := ioutil.ReadFile(filePath)
+	file, err := ioutil.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,7 @@ func ParseRSAPublicKeyFile(filePath string) (*rsa.PublicKey, error) {
  第二个出参是key的类型（PKCS1/PKCS8）
 */
 func ParseRSAPrivateKeyFile(filePath string) (*rsa.PrivateKey, string, error) {
-	file, err := ioutil.ReadFile(filePath)
+	file, err := ioutil.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return nil, "", err
 	}
