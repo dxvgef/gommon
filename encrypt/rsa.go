@@ -25,10 +25,21 @@ const (
 )
 
 // Base64编码RSA Private key为字符串
-func Base64EncodeRSAPrivateKey(privateKey *rsa.PrivateKey) (string, error) {
-	keyBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
-	if err != nil {
+func Base64EncodeRSAPrivateKey(privateKey *rsa.PrivateKey, pkcsVersion string) (string, error) {
+	var keyBytes []byte
+	var err error
+
+	pkcsVersion = strings.ToUpper(pkcsVersion)
+	switch pkcsVersion {
+	case "PKCS1":
 		keyBytes = x509.MarshalPKCS1PrivateKey(privateKey)
+	case "PKCS8":
+		keyBytes, err = x509.MarshalPKCS8PrivateKey(privateKey)
+		if err != nil {
+			return "", err
+		}
+	default:
+		return "", errors.New("仅支持转为PKCS的1和8版本的密钥")
 	}
 	keyStr := base64.StdEncoding.EncodeToString(keyBytes)
 	return keyStr, nil
@@ -42,10 +53,19 @@ func Base64EncodeRSAPublicKey(publicKey *rsa.PublicKey) (string, error) {
 }
 
 // Hex编码RSA Private key为字符串
-func HexEncodeRSAPrivateKey(privateKey *rsa.PrivateKey) (string, error) {
-	keyBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
-	if err != nil {
+func HexEncodeRSAPrivateKey(privateKey *rsa.PrivateKey, pkcsVersion uint8) (string, error) {
+	var keyBytes []byte
+	var err error
+	switch pkcsVersion {
+	case 1:
 		keyBytes = x509.MarshalPKCS1PrivateKey(privateKey)
+	case 8:
+		keyBytes, err = x509.MarshalPKCS8PrivateKey(privateKey)
+		if err != nil {
+			return "", err
+		}
+	default:
+		return "", errors.New("仅支持转为PKCS的1和8版本的密钥")
 	}
 	keyStr := hex.EncodeToString(keyBytes)
 	return keyStr, nil
@@ -80,7 +100,7 @@ func Base64DecodePublicKey(base64Str string) (*rsa.PublicKey, error) {
 		return nil, err
 	}
 
-	publicKey, err := ParseRSAPublicKey(keyBytes)
+	publicKey, err := x509.ParsePKCS1PublicKey(keyBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +130,7 @@ func HexDecodePublicKey(hexStr string) (*rsa.PublicKey, error) {
 		return nil, err
 	}
 
-	publicKey, err := ParseRSAPublicKey(keyBytes)
+	publicKey, err := x509.ParsePKCS1PublicKey(keyBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -223,11 +243,15 @@ func ParsePKCS8PrivateKey(data []byte) (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
-// 解析RSA私钥，自动识别PKCS1/PKCS8
+// 解析RSA私钥，自动识别PKCS1和PKCS8
 func ParseRSAPrivateKey(data []byte) (*rsa.PrivateKey, string, error) {
-	var err error
-	var parsedKey interface{}
-	var t string = ""
+	var (
+		err         error
+		parsedKey   interface{}
+		pkcsVersion = "PKCS1"
+		privateKey  *rsa.PrivateKey
+		ok          bool
+	)
 
 	// 尝试PKCS1
 	parsedKey, err = x509.ParsePKCS1PrivateKey(data)
@@ -239,19 +263,14 @@ func ParseRSAPrivateKey(data []byte) (*rsa.PrivateKey, string, error) {
 		if err != nil {
 			return nil, "", err
 		}
-		t = "PKCS8"
+		pkcsVersion = "PKCS8"
 	}
 
-	if t == "" {
-		t = "PKCS1"
-	}
-	var privateKey *rsa.PrivateKey
-	var ok bool
 	if privateKey, ok = parsedKey.(*rsa.PrivateKey); !ok {
 		return nil, "", errors.New("不是有效的RSA私钥")
 	}
 
-	return privateKey, t, nil
+	return privateKey, pkcsVersion, nil
 }
 
 // 格式化RSA公钥
