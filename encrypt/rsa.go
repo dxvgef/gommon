@@ -29,7 +29,9 @@ func ParseRSAPublicKeyFile(filePath string) (*rsa.PublicKey, error) {
 		return nil, err
 	}
 
-	publicKey, err := ParseRSAPublicKey(file)
+	block := ParsePEMBlocks(file)
+
+	publicKey, err := ParseRSAPublicKey(block[0].Bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +47,10 @@ func ParseRSAPrivateKeyFile(filePath string) (*rsa.PrivateKey, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	privateKey, keyType, err := ParseRSAPrivateKey(file)
+
+	block := ParsePEMBlocks(file)
+
+	privateKey, keyType, err := ParseRSAPrivateKey(block[0].Bytes)
 	if err != nil {
 		return nil, "", err
 	}
