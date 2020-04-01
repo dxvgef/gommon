@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"io/ioutil"
 	"strings"
 )
 
@@ -19,6 +20,36 @@ const (
 	kPKCS8Prefix = "-----BEGIN PRIVATE KEY-----"
 	KPKCS8Suffix = "-----END PRIVATE KEY-----"
 )
+
+// 解析RSA Public Key 文件
+func ParseRSAPublicKeyFile(filePath string) (*rsa.PublicKey, error) {
+	file, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	publicKey, err := ParseRSAPublicKey(file)
+	if err != nil {
+		return nil, err
+	}
+	return publicKey, nil
+}
+
+/*
+ 解析RSA Private Key 文件
+ 第二个出参是key的类型（PKCS1/PKCS8）
+*/
+func ParseRSAPrivateKeyFile(filePath string) (*rsa.PrivateKey, string, error) {
+	file, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, "", err
+	}
+	privateKey, keyType, err := ParseRSAPrivateKey(file)
+	if err != nil {
+		return nil, "", err
+	}
+	return privateKey, keyType, nil
+}
 
 // ParsePEMBlocks 解析PEM区块
 func ParsePEMBlocks(data []byte) []*pem.Block {
