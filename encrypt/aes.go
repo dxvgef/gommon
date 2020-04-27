@@ -8,21 +8,21 @@ import (
 )
 
 // AESEncode 加密 AES-128。key长度：16, 24, 32 bytes 对应 AES-128, AES-192, AES-256
-func AESEncode(key, plainText []byte) (string, error) {
+func AESEncode(key, iv, plainText []byte) (string, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
 	}
 	blockSize := block.BlockSize()
 	plainText = pkcs5Padding(plainText, blockSize)
-	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
+	blockMode := cipher.NewCBCEncrypter(block, iv)
 	cipherData := make([]byte, len(plainText))
 	blockMode.CryptBlocks(cipherData, plainText)
 	return hex.EncodeToString(cipherData), nil
 }
 
 // AESDecode 解密
-func AESDecode(key []byte, cipherText string) (string, error) {
+func AESDecode(key, iv []byte, cipherText string) (string, error) {
 	cipherData, err := hex.DecodeString(cipherText)
 	if err != nil {
 		return "", err
@@ -31,8 +31,7 @@ func AESDecode(key []byte, cipherText string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	blockSize := block.BlockSize()
-	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
+	blockMode := cipher.NewCBCDecrypter(block, iv)
 	origData := make([]byte, len(cipherData))
 	blockMode.CryptBlocks(origData, cipherData)
 	origData = pkcs5UnPadding(origData)
