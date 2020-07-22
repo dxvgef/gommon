@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -21,6 +22,13 @@ type Uploader struct {
 	SaveSuffix     string      // 存储文件的后缀名（如果指定了此属性值，则强制更换后缀名）
 	DirPermission  os.FileMode // 文件存放目录权限，如果目录已存在，则此参数无效
 	FilePermission os.FileMode // 文件权限
+}
+
+// 错误类型
+type Error struct {
+	FriendlyText  string // 错误文本
+	OriginalError error  // 原始的错误
+	Status        int    // HTTP状态码
 }
 
 // Result 上传结果
@@ -40,56 +48,67 @@ type _statInterface interface {
 }
 
 // Exec 执行上传
-func (obj *Uploader) Exec() (result Result, err error) {
-	var multipartFileCloseErr, newFileCloseErr error
+func (obj *Uploader) Exec() (result Result, execErr Error) {
+	var (
+		statInterface _statInterface
+		sizeInterface _sizeInterface
+		fileInfo      os.FileInfo
+		newFile       *os.File
+		ok            bool
+	)
 
 	// 获得上传文件的数据
 	multipartFile, head, err := obj.Request.FormFile(obj.FieldName)
 	if err != nil {
+		execErr.FriendlyText = "无法获得要上传的文件数据"
+		execErr.OriginalError = err
+		execErr.Status = 400
 		return
 	}
+	defer func() {
+		if err = multipartFile.Close(); err != nil {
+
+		}
+	}()
 
 	// 获得文件大小
-	if statInterface, ok := multipartFile.(_statInterface); ok {
-		fileInfo, statErr := statInterface.Stat()
-		if statErr != nil {
-			err = statErr
-			if multipartFileCloseErr = multipartFile.Close(); multipartFileCloseErr != nil {
-				err = multipartFileCloseErr
-			}
+	if statInterface, ok = multipartFile.(_statInterface); ok {
+		fileInfo, err = statInterface.Stat()
+		if err != nil {
+			execErr.FriendlyText = "无法获得要上传的文件大小"
+			execErr.OriginalError = err
+			execErr.Status = 400
 			return
 		}
 		result.FileSize = fileInfo.Size()
 	}
 	if result.FileSize == 0 {
-		if sizeInterfaceTmp, okTmp := multipartFile.(_sizeInterface); okTmp {
-			result.FileSize = sizeInterfaceTmp.Size()
+		if sizeInterface, ok = multipartFile.(_sizeInterface); ok {
+			result.FileSize = sizeInterface.Size()
 		}
 	}
 
 	// 判断文件大小
 	if result.FileSize == 0 {
 		err = errors.New("文件大小为0")
-		if multipartFileCloseErr = multipartFile.Close(); multipartFileCloseErr != nil {
-			err = multipartFileCloseErr
-		}
+		execErr.FriendlyText = err.Error()
+		execErr.OriginalError = err
+		execErr.Status = 400
 		return
 	}
 	if result.FileSize > obj.MaxSize*1024 {
-		err = errors.New("文件大小超出限制")
-		if multipartFileCloseErr = multipartFile.Close(); multipartFileCloseErr != nil {
-			err = multipartFileCloseErr
-		}
+		execErr.FriendlyText = "文件大小超出限制"
+		execErr.OriginalError = errors.New("文件大小(" + strconv.FormatInt(result.FileSize, 10) + ")超出限制(" + strconv.FormatInt(obj.MaxSize, 10) + ")")
+		execErr.Status = 400
 		return
 	}
 
 	// 判断文件MIME值
 	result.FileMIME = head.Header.Get("Content-Type")
 	if !inStr(obj.AllowMIME, result.FileMIME) {
-		err = errors.New("不允许上传该类型的文件")
-		if multipartFileCloseErr = multipartFile.Close(); multipartFileCloseErr != nil {
-			err = multipartFileCloseErr
-		}
+		execErr.FriendlyText = "不允许上传该类型的文件"
+		execErr.OriginalError = errors.New("不允许上传" + result.FileMIME + "类型的文件")
+		execErr.Status = 400
 		return
 	}
 
@@ -110,47 +129,40 @@ func (obj *Uploader) Exec() (result Result, err error) {
 	}
 
 	// 递归创建目录
-	err = os.MkdirAll(obj.SaveRootPath+"/"+obj.SaveSubPath, obj.DirPermission)
+	savePath := filepath.Clean(obj.SaveRootPath + "/" + obj.SaveSubPath)
+	err = os.MkdirAll(savePath, obj.DirPermission)
 	if err != nil {
-		err = errors.New("创建目录失败")
-		if multipartFileCloseErr = multipartFile.Close(); multipartFileCloseErr != nil {
-			err = multipartFileCloseErr
-		}
+		execErr.FriendlyText = "创建目录失败"
+		execErr.OriginalError = errors.New("创建目录失败 " + savePath)
+		execErr.Status = 500
 		return
 	}
 	// nolint:gosec
 	// 在指定的路径创建文件
-	newFile, err := os.OpenFile(filepath.Clean(obj.SaveRootPath+"/"+obj.SaveSubPath+"/"+obj.SaveName+"."+result.FileSuffix), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, obj.FilePermission)
+	filePath := filepath.Clean(obj.SaveRootPath + "/" + obj.SaveSubPath + "/" + obj.SaveName + "." + result.FileSuffix)
+	newFile, err = os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, obj.FilePermission)
 	if err != nil {
-		err = errors.New("创建文件失败")
-		if multipartFileCloseErr = multipartFile.Close(); multipartFileCloseErr != nil {
-			err = multipartFileCloseErr
-		}
+		execErr.FriendlyText = "上传文件失败"
+		execErr.OriginalError = errors.New("创建文件失败 " + filePath)
+		execErr.Status = 500
 		return
 	}
+	defer func() {
+		if err = newFile.Close(); err != nil {
+		}
+	}()
 
 	// 复制数据到文件
 	if _, err = io.Copy(newFile, multipartFile); err != nil {
-		err = errors.New("复制数据到文件失败")
-		if multipartFileCloseErr = multipartFile.Close(); multipartFileCloseErr != nil {
-			err = multipartFileCloseErr
-		}
-		if newFileCloseErr = newFile.Close(); newFileCloseErr != nil {
-			err = newFileCloseErr
-		}
+		execErr.FriendlyText = "上传文件失败"
+		execErr.OriginalError = errors.New("复制上传数据到文件失败 " + filePath)
+		execErr.Status = 500
 		return
 	}
 
 	// 返回文件路径
 	// result.FileName = obj.SaveSubPath + "/" + obj.SaveName + fileExt
 	result.FileName = obj.SaveName + "." + result.FileSuffix
-
-	if multipartFileCloseErr = multipartFile.Close(); multipartFileCloseErr != nil {
-		err = multipartFileCloseErr
-	}
-	if newFileCloseErr = newFile.Close(); newFileCloseErr != nil {
-		err = newFileCloseErr
-	}
 	return
 }
 
