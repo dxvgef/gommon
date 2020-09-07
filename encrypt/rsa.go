@@ -24,8 +24,8 @@ const (
 	KPKCS8Suffix = "-----END PRIVATE KEY-----"
 )
 
-// Base64编码RSA Private key为字符串
-func Base64EncodeRSAPrivateKey(privateKey *rsa.PrivateKey, pkcsVersion string) (string, error) {
+// RSA Private key转为Base64
+func RSAPrivateKeyToBase64(privateKey *rsa.PrivateKey, pkcsVersion string) (string, error) {
 	var keyBytes []byte
 	var err error
 
@@ -45,15 +45,15 @@ func Base64EncodeRSAPrivateKey(privateKey *rsa.PrivateKey, pkcsVersion string) (
 	return keyStr, nil
 }
 
-// Base64编码RSA Public key为字符串
-func Base64EncodeRSAPublicKey(publicKey *rsa.PublicKey) (string, error) {
+// RSA Public key转为Base64
+func RSAPublicKeyToBase64(publicKey *rsa.PublicKey) (string, error) {
 	keyBytes := x509.MarshalPKCS1PublicKey(publicKey)
 	keyStr := base64.StdEncoding.EncodeToString(keyBytes)
 	return keyStr, nil
 }
 
-// Hex编码RSA Private key为字符串
-func HexEncodeRSAPrivateKey(privateKey *rsa.PrivateKey, pkcsVersion uint8) (string, error) {
+// RSA Private key转为Hex
+func RSAPrivateKeyToHex(privateKey *rsa.PrivateKey, pkcsVersion uint8) (string, error) {
 	var keyBytes []byte
 	var err error
 	switch pkcsVersion {
@@ -71,15 +71,15 @@ func HexEncodeRSAPrivateKey(privateKey *rsa.PrivateKey, pkcsVersion uint8) (stri
 	return keyStr, nil
 }
 
-// Hex编码RSA Public key为字符串
-func HexEncodeRSAPublicKey(publicKey *rsa.PublicKey) (string, error) {
+// RSA Public key转为Hex
+func RSAPublicKeyToHex(publicKey *rsa.PublicKey) (string, error) {
 	keyBytes := x509.MarshalPKCS1PublicKey(publicKey)
 	keyStr := hex.EncodeToString(keyBytes)
 	return keyStr, nil
 }
 
-// Base64字符串解码成RSA Private Key
-func Base64DecodePrivateKey(base64Str string) (*rsa.PrivateKey, string, error) {
+// Base64转为成RSA Private Key
+func Base64ToRSAPrivateKey(base64Str string) (*rsa.PrivateKey, string, error) {
 	keyBytes, err := base64.StdEncoding.DecodeString(base64Str)
 	if err != nil {
 		return nil, "", err
@@ -93,8 +93,8 @@ func Base64DecodePrivateKey(base64Str string) (*rsa.PrivateKey, string, error) {
 	return privateKey, keyType, nil
 }
 
-// Base64字符串解码成RSA Public Key
-func Base64DecodePublicKey(base64Str string) (*rsa.PublicKey, error) {
+// RSA Public Key转为Base64
+func Base64ToRSAPublicKey(base64Str string) (*rsa.PublicKey, error) {
 	keyBytes, err := base64.StdEncoding.DecodeString(base64Str)
 	if err != nil {
 		return nil, err
@@ -108,8 +108,8 @@ func Base64DecodePublicKey(base64Str string) (*rsa.PublicKey, error) {
 	return publicKey, nil
 }
 
-// Hex字符串解码成RSA Private Key
-func HexDecodePrivateKey(hexStr string) (*rsa.PrivateKey, string, error) {
+// RSA Private Key转为Hex
+func PrivateKeyToHex(hexStr string) (*rsa.PrivateKey, string, error) {
 	keyBytes, err := hex.DecodeString(hexStr)
 	if err != nil {
 		return nil, "", err
@@ -123,8 +123,8 @@ func HexDecodePrivateKey(hexStr string) (*rsa.PrivateKey, string, error) {
 	return privateKey, keyType, nil
 }
 
-// Hex字符串解码成RSA Public Key
-func HexDecodePublicKey(hexStr string) (*rsa.PublicKey, error) {
+// RSA Public Key转为Hex
+func PublicKeyToHex(hexStr string) (*rsa.PublicKey, error) {
 	keyBytes, err := hex.DecodeString(hexStr)
 	if err != nil {
 		return nil, err
