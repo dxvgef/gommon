@@ -41,14 +41,14 @@ func RSAPrivateKeyToBase64(privateKey *rsa.PrivateKey, pkcsVersion string) (stri
 	default:
 		return "", errors.New("仅支持转为PKCS的1和8版本的密钥")
 	}
-	keyStr := base64.StdEncoding.EncodeToString(keyBytes)
+	keyStr := base64.RawURLEncoding.EncodeToString(keyBytes)
 	return keyStr, nil
 }
 
 // RSA Public key转为Base64
 func RSAPublicKeyToBase64(publicKey *rsa.PublicKey) (string, error) {
 	keyBytes := x509.MarshalPKCS1PublicKey(publicKey)
-	keyStr := base64.StdEncoding.EncodeToString(keyBytes)
+	keyStr := base64.RawURLEncoding.EncodeToString(keyBytes)
 	return keyStr, nil
 }
 
@@ -80,7 +80,7 @@ func RSAPublicKeyToHex(publicKey *rsa.PublicKey) (string, error) {
 
 // Base64转为成RSA Private Key
 func Base64ToRSAPrivateKey(base64Str string) (*rsa.PrivateKey, string, error) {
-	keyBytes, err := base64.StdEncoding.DecodeString(base64Str)
+	keyBytes, err := base64.RawURLEncoding.DecodeString(base64Str)
 	if err != nil {
 		return nil, "", err
 	}
@@ -95,7 +95,7 @@ func Base64ToRSAPrivateKey(base64Str string) (*rsa.PrivateKey, string, error) {
 
 // RSA Public Key转为Base64
 func Base64ToRSAPublicKey(base64Str string) (*rsa.PublicKey, error) {
-	keyBytes, err := base64.StdEncoding.DecodeString(base64Str)
+	keyBytes, err := base64.RawURLEncoding.DecodeString(base64Str)
 	if err != nil {
 		return nil, err
 	}
