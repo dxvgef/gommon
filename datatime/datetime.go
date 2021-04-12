@@ -10,7 +10,7 @@ const timeTpl string = "2006-01-02 15:04:05"
 
 // const timeShortTpl string = "2006-01-02 15:04"
 
-// TimeToStr 返回时间的字符串格式
+// 返回时间的字符串格式
 func TimeToStr(t time.Time, format ...string) string {
 	if len(format) == 0 {
 		return t.Format(timeTpl)
@@ -18,7 +18,7 @@ func TimeToStr(t time.Time, format ...string) string {
 	return t.Format(format[0])
 }
 
-// Timestamp将unix时间转为时间字符串
+// 将unix时间转为时间字符串
 func TimestampToStr(t int64, format ...string) string {
 	if len(format) == 0 {
 		return time.Unix(t, 0).Format(timeTpl)
@@ -26,18 +26,18 @@ func TimestampToStr(t int64, format ...string) string {
 	return time.Unix(t, 0).Format(format[0])
 }
 
-// FormatByStr 将字符串中的时间变量（y年/m月/d日/h时/i分/s秒）转换成时间字符串
+// 将字符串中的时间变量（y年/m月/d日/h时/i分/s秒）转换成时间字符串
 func FormatByStr(tpl string, t int64) string {
-	tpl = strings.Replace(tpl, "y", "2006", -1)
-	tpl = strings.Replace(tpl, "m", "01", -1)
-	tpl = strings.Replace(tpl, "d", "02", -1)
-	tpl = strings.Replace(tpl, "h", "15", -1)
-	tpl = strings.Replace(tpl, "i", "04", -1)
-	tpl = strings.Replace(tpl, "s", "05", -1)
+	tpl = strings.ReplaceAll(tpl, "y", "2006")
+	tpl = strings.ReplaceAll(tpl, "m", "01")
+	tpl = strings.ReplaceAll(tpl, "d", "02")
+	tpl = strings.ReplaceAll(tpl, "h", "15")
+	tpl = strings.ReplaceAll(tpl, "i", "04")
+	tpl = strings.ReplaceAll(tpl, "s", "05")
 	return time.Unix(t, 0).Format(tpl)
 }
 
-// GetMonthRange 获得指定年份和月份的起始unix时间和截止unix时间
+// 获得指定年份和月份的起始unix时间和截止unix时间
 func GetMonthRange(year int, month int) (beginTime, endTime int64, err error) {
 	// 获得当前时间
 	t := time.Now()
@@ -79,7 +79,7 @@ func GetMonthRange(year int, month int) (beginTime, endTime int64, err error) {
 	return
 }
 
-// GetWeek 获得星期的数字
+// 获得星期的数字
 func GetWeek(t time.Time) int {
 	week := t.Weekday().String()
 	switch week {

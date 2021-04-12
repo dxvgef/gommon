@@ -27,7 +27,7 @@ import (
 	}
 */
 
-// 输入参数
+// Params 输入参数
 type Params struct {
 	URIPrefix   string // URL前缀
 	TotalPage   int    // 总页数
@@ -35,7 +35,7 @@ type Params struct {
 	ShowNumber  int    // 显示页码的个数
 }
 
-// 控制器样式的变量
+// ControllerParams 控制器样式的变量
 type ControllerParams struct {
 	First string // 首页
 	Prev  string // 上页

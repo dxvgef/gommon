@@ -10,42 +10,41 @@ import (
 	"strings"
 )
 
-// Uploader 上传实例及参数
-type Uploader struct {
-	Request        *http.Request
-	FieldName      string      // 上传控件的name值
-	MaxSize        int64       // 文件大小限制（KB）
-	AllowMIME      []string    // 允许上传的文件MIME值
-	SaveName       string      // 存储文件名（不含后缀名），留空则保存原文件名
-	SaveRootPath   string      // 存储根路径（绝对路径）
-	SaveSubPath    string      // 存储子路径（相对SaveRootPath）
-	SaveSuffix     string      // 存储文件的后缀名（如果指定了此属性值，则强制更换后缀名）
-	DirPermission  os.FileMode // 文件存放目录权限，如果目录已存在，则此参数无效
-	FilePermission os.FileMode // 文件权限
-}
-
-// 错误类型
-type Error struct {
-	FriendlyText  string // 错误文本
-	OriginalError error  // 原始的错误
-	Status        int    // HTTP状态码
-}
-
-// Result 上传结果
-type Result struct {
-	FileSize   int64  // 文件大小
-	FileMIME   string // 文件的MIME值
-	FileName   string // 上传后的文件完整路径
-	FileSuffix string // 上传后的文件后缀名
-}
-
-// _sizeInterface 文件大小
-type _sizeInterface interface {
-	Size() int64
-}
-type _statInterface interface {
-	Stat() (os.FileInfo, error)
-}
+type (
+	// Uploader 上传实例及参数
+	Uploader struct {
+		DirPermission  os.FileMode // 文件存放目录权限，如果目录已存在，则此参数无效
+		FilePermission os.FileMode // 文件权限
+		MaxSize        int64       // 文件大小限制（KB）
+		FieldName      string      // 上传控件的name值
+		SaveName       string      // 存储文件名（不含后缀名），留空则保存原文件名
+		SaveRootPath   string      // 存储根路径（绝对路径）
+		SaveSubPath    string      // 存储子路径（相对SaveRootPath）
+		SaveSuffix     string      // 存储文件的后缀名（如果指定了此属性值，则强制更换后缀名）
+		AllowMIME      []string    // 允许上传的文件MIME值
+		Request        *http.Request
+	}
+	// 错误类型
+	Error struct {
+		Status        int    // HTTP状态码
+		OriginalError error  // 原始的错误
+		FriendlyText  string // 错误文本
+	}
+	// Result 上传结果
+	Result struct {
+		FileSize   int64  // 文件大小
+		FileMIME   string // 文件的MIME值
+		FileName   string // 上传后的文件完整路径
+		FileSuffix string // 上传后的文件后缀名
+	}
+	// _sizeInterface 文件大小
+	_sizeInterface interface {
+		Size() int64
+	}
+	_statInterface interface {
+		Stat() (os.FileInfo, error)
+	}
+)
 
 // Exec 执行上传
 func (obj *Uploader) Exec() (result Result, execErr Error) {
@@ -96,6 +95,7 @@ func (obj *Uploader) Exec() (result Result, execErr Error) {
 		execErr.Status = 400
 		return
 	}
+
 	if result.FileSize > obj.MaxSize*1024 {
 		execErr.FriendlyText = "文件大小超出限制"
 		execErr.OriginalError = errors.New("文件大小(" + strconv.FormatInt(result.FileSize, 10) + ")超出限制(" + strconv.FormatInt(obj.MaxSize, 10) + ")")
@@ -137,7 +137,6 @@ func (obj *Uploader) Exec() (result Result, execErr Error) {
 		execErr.Status = 500
 		return
 	}
-	// nolint:gosec
 	// 在指定的路径创建文件
 	filePath := filepath.Clean(obj.SaveRootPath + "/" + obj.SaveSubPath + "/" + obj.SaveName + "." + result.FileSuffix)
 	newFile, err = os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, obj.FilePermission)

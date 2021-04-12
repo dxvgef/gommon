@@ -9,7 +9,7 @@ import (
 	"hash"
 )
 
-// MD5ByBytes 从[]byte生成md5密文
+// 从[]byte生成md5密文
 func MD5ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
@@ -28,7 +28,7 @@ func MD5ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	return
 }
 
-// MD5ByStr 从string生成md5密文
+// 从string生成md5密文
 func MD5ByStr(data string, salt ...string) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
@@ -47,7 +47,7 @@ func MD5ByStr(data string, salt ...string) (cipher string, err error) {
 	return
 }
 
-// MD5ByStrings 从[]string生成md5密文
+// 从[]string生成md5密文
 func MD5ByStrings(data []string, salt ...string) (string, error) {
 	var s []byte
 	if len(salt) > 0 {
@@ -68,7 +68,7 @@ func MD5ByStrings(data []string, salt ...string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// SHA1ByBytes 根据[]byte生成sha1密文
+// 根据[]byte生成sha1密文
 func SHA1ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
@@ -87,7 +87,7 @@ func SHA1ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	return
 }
 
-// SHA1ByStr 根据string生成sha1密文
+// 根据string生成sha1密文
 func SHA1ByStr(data string, salt ...string) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
@@ -106,7 +106,7 @@ func SHA1ByStr(data string, salt ...string) (cipher string, err error) {
 	return
 }
 
-// SHA256ByBytes 根据[]byte生成sha256密文
+// 根据[]byte生成sha256密文
 func SHA256ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
@@ -126,7 +126,7 @@ func SHA256ByBytes(data []byte, salt ...[]byte) (cipher string, err error) {
 	return
 }
 
-// SHA256ByStr 根据string生成sha256密文
+// 根据string生成sha256密文
 func SHA256ByStr(data string, salt ...string) (cipher string, err error) {
 	var s []byte
 	if len(salt) > 0 {
