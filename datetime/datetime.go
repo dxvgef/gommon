@@ -1,4 +1,4 @@
-package datatime
+package datetime
 
 import (
 	"strconv"
